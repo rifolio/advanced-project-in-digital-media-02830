@@ -5,7 +5,7 @@ load_dotenv()
 
 
 def main():
-    dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+    dspy.configure(lm=dspy.LM("gemini/gemini-flash-latest"))
     qa = dspy.Predict("question -> answer")
     print(qa(question="Say hi in one word.").answer)
 
