@@ -1,0 +1,9 @@
+[project]
+name = "apdm"
+version = "0.1.0"
+description = "DTU 02830 Advanced Project in Digital Media"
+requires-python = ">=3.12"
+dependencies = [
+    "dspy>=3.3.1",
+    "python-dotenv>=1.2.3",
+]
