@@ -5,3 +5,6 @@ __pycache__/
 .env.*
 !.env.example
 .DS_Store
+data/raw/
+runs/
+PR.txt
