@@ -36,7 +36,10 @@ uv run optimize.py
 # evaluate the optimised program
 uv run evaluate.py --program runs/gepa/program.json
 
-# swap the judge or reflection model (any LiteLLM model string)
+# compare several judges on the same examples (table + runs/results.jsonl)
+uv run evaluate.py --model gemini gpt-oss jev --limit 300
+
+# swap the judge or reflection model (judge name or any LiteLLM model string)
 uv run evaluate.py --model openai/gpt-4o-mini
 uv run optimize.py --reflection-model gemini/gemini-flash-latest
 ```
@@ -46,16 +49,22 @@ Models default to `JUDGE_MODEL` / `REFLECTION_MODEL` / `NUM_THREADS` in `.env`
 (see `config.py`), and can be overridden per-run with `--model` /
 `--reflection-model` / `--threads`.
 
+Judges are named in `config.JUDGES`: `gemini` works out of the box; `gpt-oss`
+(Groq or OpenRouter), `dtu` (self-hosted on the DTU GPU) and `azure` are
+placeholders you switch on in `.env`; `jev` is TypeSafe AI's Jev classifier
+(needs `TYPESAFE_API_KEY`, benchmark only, not optimisable with GEPA). See
+`.env.example` for every variable.
+
 ## Project layout
 
 ```
-config.py        model selection (env vars / CLI flags)
+config.py        judge registry and model selection (env vars / CLI flags)
 prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
-judge.py         judge signature, ChainOfThought program, data loader, GEPA metric
-evaluate.py      recall/precision/F1/balanced accuracy on a split
+judge.py         DSPy judge, Jev judge, data loader, GEPA metric
+evaluate.py      compare judges: recall/precision/F1/latency on a split
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
 data/            mrbench.jsonl (committed), raw/ downloads (git-ignored)
-runs/            GEPA optimisation output (git-ignored)
+runs/            GEPA output and results.jsonl (git-ignored)
 ```
 
 ## Data
