@@ -10,14 +10,14 @@ from pathlib import Path
 import dspy
 
 import config
-from judge import load, make_judge, metric
+from judge import JevJudge, load, make_judge, metric
 
 MINIBATCH = 3
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--model", help=f"judge model (default {config.JUDGE_MODEL})")
+    p.add_argument("--model", help=f"judge name or model string (default {config.JUDGE_MODEL})")
     p.add_argument("--reflection-model", help=f"default {config.REFLECTION_MODEL}")
     p.add_argument("--train-limit", type=int)
     p.add_argument("--val-limit", type=int, default=20)
@@ -26,7 +26,9 @@ def main():
     p.add_argument("--out", default="runs/gepa")
     args = p.parse_args()
 
-    config.setup(args.model)
+    judge = make_judge(args.model)
+    if isinstance(judge, JevJudge):
+        raise SystemExit("GEPA only optimises LLM judges, not Jev")
     train = load("train", args.train_limit)
     val = load("val", args.val_limit)
 
@@ -45,7 +47,7 @@ def main():
         track_stats=True,
         log_dir=args.out,
     )
-    optimized = gepa.compile(make_judge(), trainset=train, valset=val)
+    optimized = gepa.compile(judge, trainset=train, valset=val)
 
     Path(args.out).mkdir(parents=True, exist_ok=True)
     optimized.save(f"{args.out}/program.json")

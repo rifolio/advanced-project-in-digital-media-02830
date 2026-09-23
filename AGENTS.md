@@ -11,6 +11,7 @@ MRBench.
 uv sync                          # install deps
 uv run prepare_data.py           # build data/mrbench.jsonl
 uv run evaluate.py --limit 50    # baseline eval
+uv run evaluate.py --model gemini jev --limit 50   # compare judges
 uv run optimize.py               # GEPA prompt optimisation
 uv run evaluate.py --selftest     # scoring math check
 ```
@@ -22,10 +23,10 @@ a small assertion check on the scoring math; run it after touching
 ## Layout
 
 ```
-config.py        model selection (env vars / CLI flags)
+config.py        judge registry (JUDGES) and model selection
 prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
-judge.py         judge signature, ChainOfThought program, data loader, GEPA metric
-evaluate.py      recall/precision/F1/balanced accuracy on a split
+judge.py         DSPy judge, Jev judge, data loader, GEPA metric
+evaluate.py      compare judges on a split, appends runs/results.jsonl
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
 ```
 
@@ -35,9 +36,11 @@ optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
   pyproject.toml by hand.
 - Never read or print `.env` or its contents. Document new variables in
   `.env.example` instead.
-- Model names live only in `config.py` (env vars `JUDGE_MODEL`,
-  `REFLECTION_MODEL`, `NUM_THREADS`, `NUM_RETRIES`, `CACHE`) or as CLI flags on top of it. Never
-  hardcode a model string anywhere else.
+- Model names live only in `config.py`: the `JUDGES` registry plus env vars
+  (`JUDGE_MODEL`, `REFLECTION_MODEL`, `GPT_OSS_MODEL`, `DTU_MODEL`,
+  `AZURE_MODEL`, `NUM_THREADS`, `NUM_RETRIES`, `CACHE`) or CLI flags on top.
+  Never hardcode a model string anywhere else. A new provider is a new
+  `JUDGES` entry, not new code, unless it is not an LLM (like Jev).
 - `data/raw/` and `runs/` are git-ignored. `data/mrbench.jsonl` is generated
   by `prepare_data.py` (seeded, committed); regenerate it, never hand-edit.
 - Keep scripts flat and simple, no framework scaffolding beyond what DSPy
