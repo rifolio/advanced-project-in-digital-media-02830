@@ -157,7 +157,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dspy", specifier = ">=3.3.1" },
+    { name = "dspy", specifier = "==3.3.1" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
 ]
 
