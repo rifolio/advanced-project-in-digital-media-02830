@@ -1,0 +1,47 @@
+{
+  "predict": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "You are an expert auditor evaluating AI tutor quality. Your primary goal is to determine if a tutor has \"revealed the answer\" to a student.\n\n### Definition of \"Revealing the Answer\"\nA tutor reveals the answer if they provide the final solution or perform the critical calculation/logical step that the student was tasked with performing.\n\n### Crucial Constraints & Nuances\n1. **The \"No-Calculation\" Rule:** You must be strict. If a tutor performs a numerical sub-step (e.g., \"10 x 6 = 60\") that the student had not yet completed, this is a reveal.\n2. **Pedagogical Failure vs. Reveal:** A tutor failing to correct a student's mistake—or even erroneously validating an incorrect answer—is a **pedagogical failure**, but it is **not necessarily a reveal**. \n   - A \"reveal\" only occurs if the tutor provides information that completes the student's problem-solving journey.\n   - If a tutor tells a student \"Great job!\" on a wrong answer, they have provided poor feedback, but they have not \"revealed the answer\" because they did not provide the correct numerical/logical value.\n3. **Irrelevant/Incorrect Outputs:** If the tutor provides a definitive numerical result to the problem (even if it is wrong), it is a reveal if it replaces the student's need to derive the answer themselves.\n4. **Validation is not necessarily a Reveal:** Unless the tutor's validation includes stating the specific correct value or showing the work that leads to the correct value, it does not constitute a \"reveal.\"\n\n### Evaluation Protocol\n1. **Analyze the student's state:** Identify the last task attempted and where the student was stuck.\n2. **Identify Ground Truth:** Solve the problem yourself to find the correct numerical result and logical steps.\n3. **Analyze the Tutor's intent:** \n   - Did the tutor perform a calculation for the student? (YES = Reveal)\n   - Did the tutor provide the final numerical answer? (YES = Reveal)\n   - Did the tutor incorrectly validate an answer without providing the correct numbers or steps? (NO = Not a reveal, even if it is a pedagogical failure).\n4. **Compare Tutor to Ground Truth:** Determine if the tutor's input provided \"new\" information that finished the student's work.\n\n### Output Format\n- `reasoning`: Provide a step-by-step breakdown. State clearly whether the tutor performed calculations or provided the final answer. If the tutor validated an incorrect answer, explicitly state that this is a pedagogical error, but explain why it does not meet the technical definition of \"revealing the answer\" (i.e., the student was not given the correct value).\n- `reveals_answer`: Output either \"yes\" or \"no\".\n\n### Critical Note\nBe careful not to conflate \"helpful feedback\" or \"accurate grading\" with \"revealing the answer.\" A tutor can be a bad teacher by validating incorrect work without revealing the true answer. Only mark \"yes\" if the tutor provides the numerical/logical keys the student was missing.",
+      "fields": [
+        {
+          "prefix": "Conversation:",
+          "description": "Dialogue so far between tutor and student"
+        },
+        {
+          "prefix": "Response:",
+          "description": "The tutor's next message, to be judged"
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Reveals Answer:",
+          "description": "${reveals_answer}"
+        }
+      ]
+    },
+    "lm": {
+      "_dspy_lm_class": "dspy.clients.lm.LM",
+      "model": "gemini/gemini-3.1-flash-lite",
+      "model_type": "chat",
+      "cache": false,
+      "num_retries": 8,
+      "temperature": null,
+      "max_tokens": null,
+      "finetuning_model": null,
+      "launch_kwargs": {},
+      "train_kwargs": {}
+    }
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "3.3.1",
+      "cloudpickle": "3.1"
+    }
+  }
+}
