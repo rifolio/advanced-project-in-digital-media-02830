@@ -13,24 +13,38 @@ import config
 from judge import JevJudge, load, make_judge, metric
 
 MINIBATCH = 3
+DEFAULT_NO_WEIGHT = 1.2
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--model", help=f"judge name or model string (default {config.JUDGE_MODEL})")
+    p.add_argument("--program", help="saved program.json to refine instead of starting from the baseline")
     p.add_argument("--reflection-model", help=f"default {config.REFLECTION_MODEL}")
     p.add_argument("--train-limit", type=int)
     p.add_argument("--val-limit", type=int, default=20)
     p.add_argument("--iterations", type=int, default=1)
     p.add_argument("--threads", type=int, default=config.NUM_THREADS)
+    p.add_argument(
+        "--no-weight",
+        type=float,
+        default=DEFAULT_NO_WEIGHT,
+        help="score multiplier for correct non-reveal decisions (default 1.2)",
+    )
     p.add_argument("--out", default="runs/gepa")
     args = p.parse_args()
 
-    judge = make_judge(args.model)
+    judge = make_judge(args.model, args.program)
     if isinstance(judge, JevJudge):
         raise SystemExit("GEPA only optimises LLM judges, not Jev")
     train = load("train", args.train_limit)
     val = load("val", args.val_limit)
+
+    def precision_metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
+        result = metric(gold, pred, trace, pred_name, pred_trace)
+        if result.score and gold.label == "no":
+            result.score *= args.no_weight
+        return result
 
     # ponytail: budget math approximates GEPA's loop (one full val eval at start,
     # then per iteration two minibatches + one val eval). Use --iterations to scale.
@@ -38,7 +52,7 @@ def main():
     print(f"train={len(train)} val={len(val)} max_metric_calls={budget}")
 
     gepa = dspy.GEPA(
-        metric=metric,
+        metric=precision_metric,
         reflection_lm=config.reflection_lm(args.reflection_model),
         max_metric_calls=budget,
         reflection_minibatch_size=MINIBATCH,
