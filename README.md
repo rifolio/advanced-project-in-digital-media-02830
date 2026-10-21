@@ -61,12 +61,30 @@ placeholders you switch on in `.env`; `jev` is TypeSafe AI's Jev classifier
 (needs `TYPESAFE_API_KEY`, benchmark only, not optimisable with GEPA). See
 `.env.example` for every variable.
 
+Small open Jev-like models, for testing before fine-tuning. Same yes/no
+question as Jev; probability judges also report `auc` (0.5 = chance), since
+a fixed 0.5 cut can hide a model that ranks well, or backwards.
+
+```bash
+# Laya (in-process encoder, ~0.1-0.6s per example on a Mac)
+uv sync --extra local
+uv run evaluate.py --model laya laya-multi --split val
+
+# Kev (Qwen-based, runs as a local server from its own repo, same API as Jev)
+git clone https://github.com/jaredpalmer/kev ../kev && cd ../kev && uv sync --extra serve
+uv run --extra serve python -m kev.serve --run jaredpalmer/kev-0.8b --port 8009
+uv run evaluate.py --model kev --split val      # back in this repo
+```
+
+Kev-4B needs more than 16 GB RAM to be usable; point `KEV_URL` at a Modal
+endpoint instead (see `.env.example`).
+
 ## Project layout
 
 ```
 config.py        judge registry and model selection (env vars / CLI flags)
 prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
-judge.py         DSPy judge, Jev judge, data loader, GEPA metric
+judge.py         DSPy judge, Jev/Kev and Laya judges, data loader, GEPA metric
 evaluate.py      compare judges: recall/precision/F1/latency on a split
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
 optimize_jev.py  GEPA optimisation of Jev instructions via its API

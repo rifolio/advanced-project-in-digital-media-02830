@@ -7,3 +7,8 @@ dependencies = [
     "dspy==3.3.1",
     "python-dotenv>=1.2.3",
 ]
+
+[project.optional-dependencies]
+local = [
+    "laya>=0.4.13",
+]
