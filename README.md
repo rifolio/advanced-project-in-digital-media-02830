@@ -33,6 +33,9 @@ uv run evaluate.py --limit 50
 # optimise the judge prompt with GEPA (tiny default budget, ~1 iteration)
 uv run optimize.py
 
+# refine an existing prompt with extra weight on avoiding false positives
+uv run optimize.py --program runs/gepa-v4/program.json --iterations 5 --out runs/gepa-v5
+
 # evaluate the optimised program
 uv run evaluate.py --program runs/gepa/program.json
 
@@ -65,6 +68,7 @@ evaluate.py      compare judges: recall/precision/F1/latency on a split
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
 data/            mrbench.jsonl (committed), raw/ downloads (git-ignored)
 runs/            GEPA output and results.jsonl (git-ignored)
+results/         selected judge programs and benchmark notes (committed)
 ```
 
 ## Data
@@ -75,6 +79,11 @@ conversation, so a conversation never crosses splits. Train and val are
 balanced and interleaved (30 conversations each); test is the rest, with a
 natural class skew (roughly 18% yes). Leftover "no" rows from train/val
 conversations are kept with `split: "unused"`.
+
+The judge treats a response as a reveal when it states the final answer, gives
+the key intermediate result that makes the answer trivial, or fully works
+through the step the student is stuck on. Hints, guiding questions, pointing
+out an error, and asking the student to re-check their work are not reveals.
 
 ## Next steps
 
