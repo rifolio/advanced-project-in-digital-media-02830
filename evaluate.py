@@ -57,7 +57,7 @@ class Timed(dspy.Module):
 
 
 def run(name, data, args):
-    judge = Timed(make_judge(name, args.program))
+    judge = Timed(make_judge(name, args.program, args.threshold))
     result = dspy.Evaluate(
         devset=data,
         metric=lambda g, pr, trace=None: getattr(pr, "reveals_answer", None) == g.label,
@@ -68,7 +68,20 @@ def run(name, data, args):
     preds = [getattr(pr, "reveals_answer", None) for _, pr, _ in result.results]
     s = scores(golds, preds)
     s["latency_s"] = statistics.median(judge.times) if judge.times else 0.0
-    return s
+    errors = [
+        {
+            "id": ex.id,
+            "label": ex.label,
+            "prediction": pred,
+            "conversation": ex.conversation,
+            "response": ex.response,
+            "solution": ex.solution,
+            "tutor": ex.tutor,
+        }
+        for (ex, _, _), pred in zip(result.results, preds)
+        if pred != ex.label
+    ]
+    return s, errors
 
 
 def main():
@@ -80,6 +93,8 @@ def main():
         help=f"judge names ({', '.join(config.JUDGES)}) or LiteLLM model strings",
     )
     p.add_argument("--program", help="saved program.json from optimize.py")
+    p.add_argument("--errors-out", help="write false positives and false negatives to JSONL")
+    p.add_argument("--threshold", type=float, default=0.5, help="Jev probability threshold")
     p.add_argument("--threads", type=int, default=config.NUM_THREADS)
     args = p.parse_args()
 
@@ -88,7 +103,7 @@ def main():
     for name in args.model:
         model, _ = config.resolve(name)
         print(f"\n{name} ({model}) on {args.split} ({len(data)} examples), program={args.program or 'baseline'}")
-        s = run(name, data, args)
+        s, errors = run(name, data, args)
         for k, v in s.items():
             print(f"{k:13} {v:.3f}" if isinstance(v, float) else f"{k:13} {v}")
         rows.append((name, s))
@@ -98,6 +113,19 @@ def main():
                 "time": datetime.now().isoformat(timespec="seconds"), "judge": name, "model": model,
                 "program": args.program, "split": args.split, "n": len(data), **s,
             }) + "\n")
+        if args.errors_out:
+            path = Path(args.errors_out)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("a", encoding="utf-8") as f:
+                for error in errors:
+                    f.write(json.dumps({
+                        "time": datetime.now().isoformat(timespec="seconds"),
+                        "judge": name,
+                        "model": model,
+                        "program": args.program,
+                        "split": args.split,
+                        **error,
+                    }) + "\n")
 
     if len(rows) > 1:
         w = max(len(name) for name, _ in rows) + 2

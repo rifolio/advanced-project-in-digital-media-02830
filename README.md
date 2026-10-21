@@ -42,6 +42,9 @@ uv run evaluate.py --program runs/gepa/program.json
 # compare several judges on the same examples (table + runs/results.jsonl)
 uv run evaluate.py --model gemini gpt-oss jev --limit 300
 
+# optimise Jev instructions with Gemini reflection (uses TypeSafe API calls)
+uv run optimize_jev.py --val-limit 20 --iterations 1 --out runs/jev-gepa
+
 # swap the judge or reflection model (judge name or any LiteLLM model string)
 uv run evaluate.py --model openai/gpt-4o-mini
 uv run optimize.py --reflection-model gemini/gemini-flash-latest
@@ -66,6 +69,7 @@ prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
 judge.py         DSPy judge, Jev judge, data loader, GEPA metric
 evaluate.py      compare judges: recall/precision/F1/latency on a split
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
+optimize_jev.py  GEPA optimisation of Jev instructions via its API
 data/            mrbench.jsonl (committed), raw/ downloads (git-ignored)
 runs/            GEPA output and results.jsonl (git-ignored)
 results/         selected judge programs and benchmark notes (committed)
