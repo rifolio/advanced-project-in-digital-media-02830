@@ -25,6 +25,11 @@ JUDGES = {
     "azure": {"model": os.getenv("AZURE_MODEL"), "needs": "AZURE_MODEL"},
     # not an LLM, handled by judge.JevJudge; needs TYPESAFE_API_KEY
     "jev": {"model": "typesafe/jev-latest"},
+    # open Jev-like model (github.com/jaredpalmer/kev) served locally, same API as Jev
+    "kev": {"model": "typesafe/kev-latest", "api_base": os.getenv("KEV_URL", "http://127.0.0.1:8009")},
+    # small local encoders (github.com/NandhaKishorM/laya), in-process; needs `uv sync --extra local`
+    "laya": {"model": "laya/english"},
+    "laya-multi": {"model": "laya/multilingual"},
 }
 
 JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gemini")

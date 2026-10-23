@@ -10,7 +10,7 @@ from pathlib import Path
 import dspy
 
 import config
-from judge import JevJudge, load, make_judge, metric
+from judge import JevJudge, LayaJudge, load, make_judge, metric
 
 MINIBATCH = 3
 DEFAULT_NO_WEIGHT = 1.2
@@ -35,8 +35,8 @@ def main():
     args = p.parse_args()
 
     judge = make_judge(args.model, args.program)
-    if isinstance(judge, JevJudge):
-        raise SystemExit("GEPA only optimises LLM judges, not Jev")
+    if isinstance(judge, (JevJudge, LayaJudge)):
+        raise SystemExit("GEPA only optimises LLM judges, not Jev, Kev or Laya (use optimize_jev.py for Jev)")
     train = load("train", args.train_limit)
     val = load("val", args.val_limit)
 
