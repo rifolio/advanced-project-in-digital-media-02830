@@ -19,7 +19,18 @@ import config
 from judge import load, make_judge
 
 RESULTS = "runs/results.jsonl"
-COLS = ["recall", "precision", "f1", "balanced_acc", "failed", "latency_s"]
+COLS = ["recall", "precision", "f1", "balanced_acc", "auc", "failed", "latency_s"]
+
+
+def auc(golds, probs):
+    """Chance a random "yes" gets a higher probability than a random "no" (0.5 = chance).
+    Threshold-free, so it shows whether a probability judge ranks well even when 0.5 is a bad cut."""
+    ys = [p for g, p in zip(golds, probs) if g == "yes" and p is not None]
+    ns = [p for g, p in zip(golds, probs) if g == "no" and p is not None]
+    if not ys or not ns:
+        return None
+    # ponytail: O(yes*no) pairs, fine for a few thousand rows
+    return sum((a > b) + 0.5 * (a == b) for a in ys for b in ns) / (len(ys) * len(ns))
 
 
 def scores(golds, preds):
@@ -67,6 +78,8 @@ def run(name, data, args):
     golds = [ex.label for ex, _, _ in result.results]
     preds = [getattr(pr, "reveals_answer", None) for _, pr, _ in result.results]
     s = scores(golds, preds)
+    # only probability judges (Jev, Kev, Laya) have one; LLM judges log None
+    s["auc"] = auc(golds, [getattr(pr, "probability", None) for _, pr, _ in result.results])
     s["latency_s"] = statistics.median(judge.times) if judge.times else 0.0
     errors = [
         {
@@ -94,7 +107,7 @@ def main():
     )
     p.add_argument("--program", help="saved program.json from optimize.py")
     p.add_argument("--errors-out", help="write false positives and false negatives to JSONL")
-    p.add_argument("--threshold", type=float, default=0.5, help="Jev probability threshold")
+    p.add_argument("--threshold", type=float, default=0.5, help="probability threshold for Jev, Kev and Laya")
     p.add_argument("--threads", type=int, default=config.NUM_THREADS)
     args = p.parse_args()
 
@@ -132,7 +145,7 @@ def main():
         print("\n" + f"{'judge':{w}}" + "".join(f"{c:>14}" for c in COLS))
         for name, s in rows:
             print(f"{name:{w}}" + "".join(
-                f"{s[c]:>14.3f}" if isinstance(s[c], float) else f"{s[c]:>14}" for c in COLS
+                f"{s[c]:>14.3f}" if isinstance(s[c], float) else f"{str(s[c]):>14}" for c in COLS
             ))
 
 
@@ -145,6 +158,8 @@ if __name__ == "__main__":
         assert (s["tp"], s["fn"], s["fp"], s["tn"]) == (1, 1, 1, 1)
         assert s["recall"] == s["precision"] == s["f1"] == s["balanced_acc"] == 0.5
         assert scores(["yes"], [None])["failed"] == 1
+        assert auc(["yes", "no", "yes", "no"], [0.9, 0.1, 0.4, 0.6]) == 0.75
+        assert auc(["yes", "no"], [None, None]) is None
         print("ok")
     else:
         main()

@@ -2,6 +2,7 @@
 
 import json
 import os
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -40,13 +41,15 @@ class JevInstructions(dspy.Signature):
 class JevJudge(dspy.Module):
     """TypeSafe AI's Jev binary classifier with a GEPA-editable instruction carrier."""
 
-    URL = "https://api.typesafe.ai/v1/systemone"
     SUFFIX = "\n\nReturn only the binary reveal probability required by the Noul question."
 
-    def __init__(self, model, seed_instructions=None, threshold=0.5):
+    def __init__(self, model, api_base=None, seed_instructions=None, threshold=0.5):
         super().__init__()
         self.model = model.removeprefix("typesafe/")
-        self.key = os.getenv("TYPESAFE_API_KEY")
+        self.url = (api_base or "https://api.typesafe.ai") + "/v1/systemone"
+        # Kev: a local server needs no key, a Modal endpoint needs KEV_API_KEY.
+        # Never send the TypeSafe key anywhere else.
+        self.key = os.getenv("KEV_API_KEY", "local") if api_base else os.getenv("TYPESAFE_API_KEY")
         if not self.key:
             raise SystemExit("Jev needs TYPESAFE_API_KEY in .env")
         self.threshold = threshold
@@ -65,7 +68,7 @@ class JevJudge(dspy.Module):
             },
         }
         req = urllib.request.Request(
-            self.URL,
+            self.url,
             data=json.dumps(body).encode(),
             headers={"Authorization": f"Bearer {self.key}", "Content-Type": "application/json"},
         )
@@ -95,9 +98,40 @@ class JevJudge(dspy.Module):
         return pred
 
 
+class LayaJudge(dspy.Module):
+    """Laya (github.com/NandhaKishorM/laya), a small local encoder with the same
+    yes/no "Noul" question as Jev. Needs `uv sync --extra local`."""
+
+    def __init__(self, model, threshold=0.5):
+        super().__init__()
+        try:
+            from laya import Router
+        except ImportError:
+            raise SystemExit("Laya needs the local extra: uv sync --extra local")
+        self.model = model.removeprefix("laya/")
+        self.threshold = threshold
+        self.router = Router()
+        # ponytail: one model on one device, so calls are serialised; drop the lock if it ever batches
+        self.lock = threading.Lock()
+
+    def forward(self, conversation, response):
+        with self.lock:
+            out = self.router.predict(
+                {"conversation": conversation, "tutor_response": response},
+                {"reveals": {"type": "noul", "instructions": RevealsAnswer.__doc__}},
+                model=self.model,
+            )
+        p = out["answers"]["reveals"]["noul"]
+        return dspy.Prediction(reveals_answer="yes" if p >= self.threshold else "no", probability=p)
+
+
 def make_judge(name=None, program_path=None, threshold=0.5):
     """Judge by name (see config.JUDGES) or raw model string."""
-    model, _ = config.resolve(name)
+    model, kwargs = config.resolve(name)
+    if model.startswith("laya/"):
+        if program_path:
+            raise SystemExit("Laya has no prompt program to load")
+        return LayaJudge(model, threshold)
     if model.startswith("typesafe/"):
         seed = None
         if program_path:
@@ -107,7 +141,7 @@ def make_judge(name=None, program_path=None, threshold=0.5):
             if not module_state:
                 raise ValueError(f"No predictor instructions found in {program_path}")
             seed = module_state["signature"]["instructions"]
-        return JevJudge(model, seed_instructions=seed, threshold=threshold)
+        return JevJudge(model, kwargs.get("api_base"), seed_instructions=seed, threshold=threshold)
     judge = dspy.ChainOfThought(RevealsAnswer)
     if program_path:
         judge.load(program_path)
