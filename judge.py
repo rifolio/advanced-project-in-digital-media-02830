@@ -125,6 +125,16 @@ class LayaJudge(dspy.Module):
         return dspy.Prediction(reveals_answer="yes" if p >= self.threshold else "no", probability=p)
 
 
+def load_instructions(program_path):
+    """Instruction text from a saved program.json (DSPy judge or Jev format)."""
+    with open(program_path, encoding="utf-8-sig") as f:
+        state = json.load(f)
+    module_state = state.get("predictor") or state.get("predict")
+    if not module_state:
+        raise ValueError(f"No predictor instructions found in {program_path}")
+    return module_state["signature"]["instructions"]
+
+
 def make_judge(name=None, program_path=None, threshold=0.5):
     """Judge by name (see config.JUDGES) or raw model string."""
     model, kwargs = config.resolve(name)
@@ -133,14 +143,7 @@ def make_judge(name=None, program_path=None, threshold=0.5):
             raise SystemExit("Laya has no prompt program to load")
         return LayaJudge(model, threshold)
     if model.startswith("typesafe/"):
-        seed = None
-        if program_path:
-            with open(program_path, encoding="utf-8-sig") as f:
-                state = json.load(f)
-            module_state = state.get("predictor") or state.get("predict")
-            if not module_state:
-                raise ValueError(f"No predictor instructions found in {program_path}")
-            seed = module_state["signature"]["instructions"]
+        seed = load_instructions(program_path) if program_path else None
         return JevJudge(model, kwargs.get("api_base"), seed_instructions=seed, threshold=threshold)
     judge = dspy.ChainOfThought(RevealsAnswer)
     if program_path:

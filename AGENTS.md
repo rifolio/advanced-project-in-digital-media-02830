@@ -25,6 +25,8 @@ a small assertion check on the scoring math; run it after touching
 ```
 config.py        judge registry (JUDGES) and model selection
 prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
+prepare_training_data.py  rewrites GSM8K into training data, data/gsm8k.jsonl + data/kev/
+label_sample.py  blind hand-labelling of training rows, agreement with the pipeline
 judge.py         DSPy judge, Jev judge, data loader, GEPA metric
 evaluate.py      compare judges on a split, appends runs/results.jsonl
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
@@ -37,7 +39,7 @@ optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
 - Never read or print `.env` or its contents. Document new variables in
   `.env.example` instead.
 - Model names live only in `config.py`: the `JUDGES` registry plus env vars
-  (`JUDGE_MODEL`, `REFLECTION_MODEL`, `GPT_OSS_MODEL`, `DTU_MODEL`,
+  (`JUDGE_MODEL`, `REFLECTION_MODEL`, `GENERATOR_MODEL`, `GPT_OSS_MODEL`, `DTU_MODEL`,
   `AZURE_MODEL`, `NUM_THREADS`, `NUM_RETRIES`, `CACHE`) or CLI flags on top.
   Never hardcode a model string anywhere else. A new provider is a new
   `JUDGES` entry, not new code, unless it is not an LLM (like Jev).

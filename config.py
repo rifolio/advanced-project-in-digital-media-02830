@@ -30,10 +30,16 @@ JUDGES = {
     # small local encoders (github.com/NandhaKishorM/laya), in-process; needs `uv sync --extra local`
     "laya": {"model": "laya/english"},
     "laya-multi": {"model": "laya/multilingual"},
+    # LiteLLM strings, e.g. anthropic/claude-haiku-5-5 (needs ANTHROPIC_API_KEY)
+    # "claude": {"model": os.getenv("CLAUDE_MODEL"), "needs": "CLAUDE_MODEL"},
+    # e.g. openai/gpt-4o-mini (needs OPENAI_API_KEY)
+    # "chatgpt": {"model": os.getenv("OPENAI_MODEL"), "needs": "OPENAI_MODEL"},
 }
 
 JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gemini")
 REFLECTION_MODEL = os.getenv("REFLECTION_MODEL", "gemini/gemini-flash-latest")
+# Models that write synthetic training data (prepare_training_data.py), comma-separated.
+GENERATOR_MODELS = os.getenv("GENERATOR_MODEL", "gemini").split(",")
 NUM_THREADS = int(os.getenv("NUM_THREADS", "4"))
 # Retries with exponential backoff on 429 / transient errors (handled by LiteLLM).
 NUM_RETRIES = int(os.getenv("NUM_RETRIES", "8"))
@@ -60,4 +66,9 @@ def judge_lm(name=None):
 
 def reflection_lm(model=None):
     model, kwargs = resolve(model or REFLECTION_MODEL)
+    return dspy.LM(model, cache=CACHE, num_retries=NUM_RETRIES, temperature=1.0, **kwargs)
+
+
+def generator_lm(name):
+    model, kwargs = resolve(name)
     return dspy.LM(model, cache=CACHE, num_retries=NUM_RETRIES, temperature=1.0, **kwargs)
