@@ -45,6 +45,13 @@ uv run evaluate.py --model gemini gpt-oss jev --limit 300
 # optimise Jev instructions with Gemini reflection (uses TypeSafe API calls)
 uv run optimize_jev.py --val-limit 20 --iterations 1 --out runs/jev-gepa
 
+# turn GSM8K into balanced training data (data/gsm8k.jsonl + data/kev/ for Kev);
+# an LLM writes a reveal and a guide reply per problem, a judge checks the labels
+uv run prepare_training_data.py --limit 200
+
+# hand-label a blind sample of it and see how often you agree with the pipeline
+uv run label_sample.py --n 40
+
 # swap the judge or reflection model (judge name or any LiteLLM model string)
 uv run evaluate.py --model openai/gpt-4o-mini
 uv run optimize.py --reflection-model gemini/gemini-flash-latest
@@ -84,6 +91,8 @@ endpoint instead (see `.env.example`).
 ```
 config.py        judge registry and model selection (env vars / CLI flags)
 prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
+prepare_training_data.py  rewrites GSM8K into training data, data/gsm8k.jsonl + data/kev/
+label_sample.py  blind hand-labelling of training rows, agreement with the pipeline
 judge.py         DSPy judge, Jev/Kev and Laya judges, data loader, GEPA metric
 evaluate.py      compare judges: recall/precision/F1/latency on a split
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
