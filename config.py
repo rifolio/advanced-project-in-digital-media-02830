@@ -11,7 +11,15 @@ load_dotenv()
 # string, e.g. --model ollama_chat/gpt-oss-safeguard:20b.
 # `needs` names the env var that must be set before that judge can be used.
 JUDGES = {
-    "gemini": {"model": "gemini/gemini-flash-lite-latest"},
+    # pinned versions, never *-latest aliases: an alias moves and silently changes results
+    "gemini": {"model": "gemini/gemini-3.5-flash-lite"},
+    "gemini-3.5-flash-lite": {"model": "gemini/gemini-3.5-flash-lite"},
+    "gemini-3.5-flash": {"model": "gemini/gemini-3.5-flash"},
+    "gemini-3.6-flash": {"model": "gemini/gemini-3.6-flash"},
+    "gemini-3.7-flash": {"model": "gemini/gemini-3.7-flash"},
+    "gemini-3.8-flash": {"model": "gemini/gemini-3.8-flash"},
+    "gemini-3.1-pro": {"model": "gemini/gemini-3.1-pro-preview"},
+    "gemini-4-argon": {"model": "gemini/gemini-4-argon"},
     # groq/openai/gpt-oss-safeguard-20b or openrouter/openai/gpt-oss-safeguard-20b
     "gpt-oss": {"model": os.getenv("GPT_OSS_MODEL"), "needs": "GPT_OSS_MODEL"},
     # self-hosted OpenAI-compatible server on the DTU GPU, e.g. hosted_vllm/<model>
@@ -24,7 +32,9 @@ JUDGES = {
     # azure/<deployment>; LiteLLM reads AZURE_API_KEY, AZURE_API_BASE, AZURE_API_VERSION
     "azure": {"model": os.getenv("AZURE_MODEL"), "needs": "AZURE_MODEL"},
     # not an LLM, handled by judge.JevJudge; needs TYPESAFE_API_KEY
-    "jev": {"model": "typesafe/jev-latest"},
+    "jev": {"model": "typesafe/jev-1.14.0"},
+    "jev-1.14": {"model": "typesafe/jev-1.14.0"},
+    "jev-1.13": {"model": "typesafe/jev-1.13.0"},
     # open Jev-like model (github.com/jaredpalmer/kev) served locally, same API as Jev
     "kev": {"model": "typesafe/kev-latest", "api_base": os.getenv("KEV_URL", "http://127.0.0.1:8009")},
     # small local encoders (github.com/NandhaKishorM/laya), in-process; needs `uv sync --extra local`
