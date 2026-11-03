@@ -11,6 +11,23 @@ The first six rows used the moving aliases (`jev-latest`,
 `gemini-flash-lite-latest`). Every later row uses a pinned version; `config.py`
 now pins `gemini` to `gemini-3.5-flash-lite` and `jev` to `jev-1.14.0`.
 
+**Thinking level.** No run set one: we send no `reasoning_effort`, `thinking`
+or thinking budget, so each model ran at its provider default. Every LLM judge
+is a dspy `ChainOfThought`, so it also writes a visible reasoning field before
+the answer. What the default does, from one call per model on 2026-11-03
+(`reasoning_tokens` in the usage):
+
+| Model | Hidden thinking at default |
+|---|---|
+| gemini-3.5-flash-lite | off (no thinking tokens) |
+| gemini-3.5-flash, 3.6-flash, 3.7-flash, 3.8-flash, 3.1-pro | on, about 200-300 thinking tokens per call |
+| gemini-4-argon | none reported |
+| claude-haiku-5-5, claude-sonnet-5-5 | off (0 thinking tokens, Anthropic needs it enabled explicitly) |
+
+So part of the latency gap between flash-lite and the bigger Gemini models is
+thinking. Defaults can change like aliases do; pin a level in `config.JUDGES`
+if a rerun has to match.
+
 | Judge | Model | Prompt | Acc | Bal. acc | Precision | Recall | F1 | AUC | TP | FP | FN | TN | Latency (s) |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | jev | `typesafe/jev-latest` | baseline, threshold 0.5 | 0.907 | 0.944 | 0.636 | 1.000 | 0.778 | 0.995 | 49 | 28 | 0 | 223 | 0.17 |
