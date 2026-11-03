@@ -20,6 +20,11 @@ Always `uv run`, never bare `python`/`python3`. `evaluate.py --selftest` runs
 a small assertion check on the scoring math; run it after touching
 `evaluate.py`.
 
+Run independent evaluations in parallel, one `evaluate.py` process per model
+or prompt, never one after another. `--model a b` runs the models in sequence,
+so split it: `uv run evaluate.py --model a & uv run evaluate.py --model b & wait`.
+Each appends its own lines to `runs/results.jsonl`; 429s are retried.
+
 ## Layout
 
 ```
