@@ -40,8 +40,10 @@ JUDGES = {
     # small local encoders (github.com/NandhaKishorM/laya), in-process; needs `uv sync --extra local`
     "laya": {"model": "laya/english"},
     "laya-multi": {"model": "laya/multilingual"},
-    # LiteLLM strings, e.g. anthropic/claude-haiku-5-5 (needs ANTHROPIC_API_KEY)
-    # "claude": {"model": os.getenv("CLAUDE_MODEL"), "needs": "CLAUDE_MODEL"},
+    # needs ANTHROPIC_API_KEY
+    "claude": {"model": "anthropic/claude-sonnet-5-5"},
+    "claude-haiku-5-5": {"model": "anthropic/claude-haiku-5-5"},
+    "claude-sonnet-5-5": {"model": "anthropic/claude-sonnet-5-5"},
     # e.g. openai/gpt-4o-mini (needs OPENAI_API_KEY)
     # "chatgpt": {"model": os.getenv("OPENAI_MODEL"), "needs": "OPENAI_MODEL"},
 }
