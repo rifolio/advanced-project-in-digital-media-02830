@@ -37,6 +37,10 @@ now pins `gemini` to `gemini-3.5-flash-lite` and `jev` to `jev-1.14.0`.
 | gemini-3.1-pro | `gemini/gemini-3.1-pro-preview` | V5 | 0.927 | 0.932 | 0.708 | 0.939 | 0.807 | - | 46 | 19 | 3 | 232 | 4.75 |
 | gemini-4-argon | `gemini/gemini-4-argon` | baseline | 0.923 | 0.954 | 0.681 | 1.000 | 0.810 | - | 49 | 23 | 0 | 228 | 3.48 |
 | gemini-4-argon | `gemini/gemini-4-argon` | V5 | 0.927 | 0.948 | 0.696 | 0.980 | 0.814 | - | 48 | 21 | 1 | 230 | 5.31 |
+| claude-haiku-5-5 | `anthropic/claude-haiku-5-5` | baseline | 0.953 | 0.947 | 0.807 | 0.939 | 0.868 | - | 46 | 11 | 3 | 240 | 2.18 |
+| claude-haiku-5-5 | `anthropic/claude-haiku-5-5` | V5 | 0.937 | 0.938 | 0.742 | 0.939 | 0.829 | - | 46 | 16 | 3 | 235 | 3.07 |
+| claude-sonnet-5-5 | `anthropic/claude-sonnet-5-5` | baseline | 0.923 | 0.913 | 0.710 | 0.898 | 0.793 | - | 44 | 18 | 5 | 233 | 2.38 |
+| claude-sonnet-5-5 | `anthropic/claude-sonnet-5-5` | V5 | 0.933 | 0.936 | 0.730 | 0.939 | 0.821 | - | 46 | 17 | 3 | 234 | 3.29 |
 
 ## What it shows
 
@@ -52,11 +56,15 @@ now pins `gemini` to `gemini-3.5-flash-lite` and `jev` to `jev-1.14.0`.
   Its errors are threshold errors. 1.13 and 1.14 give the same result with V5.
 - **Pinned 3.5 flash-lite reproduces the alias run** (V5 0.970 vs 0.967), so
   `gemini-flash-lite-latest` most likely pointed at it. Not proven.
+- **Claude Haiku 5.5 is the best judge without tuning** (0.953 accuracy, F1
+  0.868, FP 11, run 2026-11-03), ahead of every baseline Gemini. Sonnet 5.5 is
+  worse than Haiku. V5 lowers Haiku too, the same pattern as on Gemini.
 - Laya is at chance or below.
 - The same non-reveal rows are probably flagged by every model, which would
-  point at MRBench label noise (Juan's note). Not checked yet: rerun with
-  `--errors-out` and intersect the false positives.
-- Not run, no credentials yet: gpt-oss, Claude, GPT on Azure, DTU, Kev.
+  point at MRBench label noise (Juan's note). First check: 9 non-reveals are
+  flagged by all four Claude runs. Gemini errors were not saved, rerun with
+  `--errors-out` to intersect across families.
+- Not run, no credentials yet: gpt-oss, GPT on Azure, DTU, Kev.
 
 Reproduce:
 
@@ -65,4 +73,6 @@ G="gemini-3.5-flash-lite gemini-3.5-flash gemini-3.6-flash gemini-3.7-flash gemi
 uv run evaluate.py --model jev-1.14 jev-1.13 laya laya-multi $G --split test --limit 300
 uv run evaluate.py --model jev-1.14 jev-1.13 --program results/jev-v5/program.json --threshold 0.6 --split test --limit 300
 for m in $G; do uv run evaluate.py --model $m --program results/v5/program.json --split test --limit 300; done
+uv run evaluate.py --model claude-haiku-5-5 claude-sonnet-5-5 --split test --limit 300
+uv run evaluate.py --model claude-haiku-5-5 claude-sonnet-5-5 --program results/v5/program.json --split test --limit 300
 ```
