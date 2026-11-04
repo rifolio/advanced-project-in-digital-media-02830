@@ -14,6 +14,8 @@ uv run evaluate.py --limit 50    # baseline eval
 uv run evaluate.py --model gemini jev --limit 50   # compare judges
 uv run optimize.py               # GEPA prompt optimisation
 uv run evaluate.py --selftest     # scoring math check
+uv run build_dataset.py --mathdial 20 --gsm8k 20   # v2 data pilot (resumes from data/raw/)
+uv run shortcut_audit.py data/gsm8k.jsonl data/reveal_v2.jsonl   # shortcut audit
 ```
 
 Always `uv run`, never bare `python`/`python3`. `evaluate.py --selftest` runs
@@ -32,6 +34,9 @@ config.py        judge registry (JUDGES) and model selection
 prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
 prepare_training_data.py  rewrites GSM8K into training data, data/gsm8k.jsonl + data/kev/
 label_sample.py  blind hand-labelling of training rows, agreement with the pipeline
+build_dataset.py  v2 reveal data from MathDial + GSM8K, 3 generator families, cross-family
+                 verification, data/reveal_v2.jsonl (datasheet data/reveal_v2.md)
+shortcut_audit.py  number/?/length/bag-of-words shortcut audit for any reveal data file
 judge.py         DSPy judge, Jev judge, data loader, GEPA metric
 evaluate.py      compare judges on a split, appends runs/results.jsonl
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
