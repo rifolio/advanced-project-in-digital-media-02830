@@ -34,7 +34,7 @@ config.py        judge registry (JUDGES) and model selection
 prepare_data.py  downloads MRBench, builds data/mrbench.jsonl
 prepare_training_data.py  rewrites GSM8K into training data, data/gsm8k.jsonl + data/kev/
 label_sample.py  blind hand-labelling of training rows, agreement with the pipeline
-build_dataset.py  v2 reveal data from MathDial + GSM8K, 3 generator families, cross-family
+build_dataset.py  v2 reveal data from MathDial + GSM8K, several model families, cross-family
                  verification, data/reveal_v2.jsonl (datasheet data/reveal_v2.md)
 shortcut_audit.py  number/?/length/bag-of-words shortcut audit for any reveal data file
 judge.py         DSPy judge, Jev judge, data loader, GEPA metric
