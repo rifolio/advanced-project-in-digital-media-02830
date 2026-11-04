@@ -5,7 +5,8 @@
   uv run shortcut_audit.py --selftest
 
 Reports, per split and per generator: the answer-number rule ("yes iff the reply
-contains the final answer"), the ends-with-? rule, length AUC, openers that give
+contains the final answer"), the new-number rule ("yes iff the reply has a number the
+conversation does not"), the ends-with-? rule, length AUC, openers that give
 the label away, and a held-out bag-of-words naive Bayes (train -> val) for the
 label and for the generator. The label model trained on the file is also scored on
 every labelled MRBench row, which shows how much of what it learned transfers.
@@ -58,6 +59,15 @@ def number_rule(r):
     return "yes" if a and has_number(r["response"], a) else "no"
 
 
+def nums(text):
+    return set(re.findall(r"\d+(?:\.\d+)?", re.sub(r"(?<=\d),(?=\d{3})", "", text)))
+
+
+def new_number_rule(r):
+    """'yes iff the reply has a number the conversation does not', needs no solution."""
+    return "yes" if nums(r["response"]) - nums(r["conversation"]) else "no"
+
+
 def question_rule(r):
     return "no" if r["response"].rstrip().endswith("?") else "yes"
 
@@ -108,7 +118,7 @@ def table(rows, mrbench):
     is_yes = lambda r: r["label"] == "yes"
     train = [r for r in rows if r["split"] == "train"]
     val = [r for r in rows if r["split"] == "val"]
-    print(f"  {'slice':26}{'rows':>6}{'yes':>6}{'number':>7}{'ends?':>7}{'len':>7}{'bow':>7}{'bow>MRB':>8}")
+    print(f"  {'slice':26}{'rows':>6}{'yes':>6}{'number':>7}{'new#':>7}{'ends?':>7}{'len':>7}{'bow':>7}{'bow>MRB':>8}")
     slices = [("all", lambda r: True), ("train", lambda r: r["split"] == "train"),
               ("val", lambda r: r["split"] == "val")]
     for key in ("tutor", "context_source", "length"):
@@ -121,14 +131,14 @@ def table(rows, mrbench):
         bow = nb_auc(tr, va, is_yes)
         transfer = nb_auc(tr, mrbench, is_yes) if name in ("all", "train") or "=" in name else None
         print(f"  {name:26}{len(sub):6}{sum(map(is_yes, sub)) / len(sub):6.2f}{fmt(ba(sub, number_rule))}"
-              f"{fmt(ba(sub, question_rule))} {fmt(auc([r['label'] for r in sub], [len(r['response']) for r in sub]))}"
+              f"{fmt(ba(sub, new_number_rule))}{fmt(ba(sub, question_rule))} {fmt(auc([r['label'] for r in sub], [len(r['response']) for r in sub]))}"
               f"{fmt(bow)} {fmt(transfer)}")
 
 
 def audit(rows, mrbench=None):
     mrbench = mrbench if mrbench is not None else [json.loads(line) for line in open(MRBENCH)]
     print("\nshortcut audit (balanced accuracy for rules, AUC for length and bag-of-words; 0.5 = no signal)")
-    print("  number: 'yes iff the reply has the final answer'; ends?: 'no iff it ends with ?'; "
+    print("  number: 'yes iff the reply has the final answer'; new#: 'yes iff it has a number not in the chat'; ends?: 'no iff it ends with ?'; "
           "len: longer = yes; bow: naive Bayes train->val; bow>MRB: same model on all MRBench rows")
     table(rows, mrbench)
     gens = sorted({r.get("tutor") for r in rows})
@@ -151,7 +161,7 @@ def mrbench_rules(mrbench):
     for name, sub in (("all", mrbench), *((s, [r for r in mrbench if r["source"] == s])
                                           for s in sorted({r["source"] for r in mrbench}))):
         print(f"  {name:10} rows {len(sub):5}  yes {sum(r['label'] == 'yes' for r in sub) / len(sub):.2f}  "
-              f"number {ba(sub, number_rule):.3f}  ends? {ba(sub, question_rule):.3f}  "
+              f"number {ba(sub, number_rule):.3f}  new# {ba(sub, new_number_rule):.3f}  ends? {ba(sub, question_rule):.3f}  "
               f"len {auc([r['label'] for r in sub], [len(r['response']) for r in sub]):.3f}")
 
 
@@ -175,6 +185,8 @@ if __name__ == "__main__":
         assert answer_of({"solution": "so 30+60 = 90 presents.\n 90"}) == "90"
         assert answer_of({"solution": "Not Available"}) is None
         assert number_rule({"response": "It is 1,200.", "answer": "1200"}) == "yes"
+        assert new_number_rule({"response": "so 12 and 7", "conversation": "7 apples"}) == "yes"
+        assert new_number_rule({"response": "check the 7", "conversation": "7 apples"}) == "no"
         rows = [{"response": t, "label": l} for t, l in [("the answer is 5", "yes"), ("what next?", "no")] * 3]
         assert nb_auc(rows, rows, lambda r: r["label"] == "yes") == 1.0
         print("ok")

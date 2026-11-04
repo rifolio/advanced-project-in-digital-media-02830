@@ -385,11 +385,13 @@ def last_number(text):
 
 def mathdial_contexts(gsm, generators):
     """Real MathDial train chats in the MRBench format, cut after a random student turn
-    before anyone says the answer. The student's first turn is their wrong solution."""
+    before anyone says the answer. The student's first turn is their wrong solution.
+    All first cuts come before all second cuts (another student turn of the same chat,
+    replied to by the other family), so --mathdial above the number of chats adds those."""
     chats = [{**json.loads(line), "index": i} for i, line in enumerate(MATHDIAL_TRAIN.open())]
     chats = without_leaks(chats)
     random.Random(SEED).shuffle(chats)
-    out = []
+    out, second = [], []
     for m in chats:
         p = gsm.get(problem_key(m["question"]))
         answer = p["answer"] if p else last_number(m["ground_truth"])
@@ -408,17 +410,22 @@ def mathdial_contexts(gsm, generators):
             continue
         cid = f"mathdial_{m['index']:04d}"
         cut = random.Random(f"{SEED}-{cid}").choice(cuts)
-        out.append({
+        context = lambda cid, cut: {
             "cid": cid, "problem_id": p["problem_id"] if p else cid, "question": m["question"].strip(),
             "solution": p["solution"] if p else m["ground_truth"].strip(), "answer": answer,
             "student_answer": last_number(m["student_incorrect_solution"]), "context_source": "mathdial_real",
             "context_generator": "human",
             "conversation": OPENER.format(question=m["question"].strip())
                             + " \n ".join(f"{s}: {t}" for s, t in turns[: cut + 1]),
-        })
-    for i, c in enumerate(out):
+        }
+        out.append(context(cid, cut))
+        rest = [c for c in cuts if c != cut]
+        second.append(context(f"{cid}_b", random.Random(f"{SEED}-{cid}-b").choice(rest)) if rest else None)
+    for i, (c, b) in enumerate(zip(out, second)):
         c["generator"] = generators[i % len(generators)]
-    return out
+        if b:
+            b["generator"] = generators[(i + 1) % len(generators)]
+    return out + [b for b in second if b]
 
 
 def tidy_turns(text):
