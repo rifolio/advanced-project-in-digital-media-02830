@@ -268,6 +268,8 @@ def check_context(c):
         return "context does not end with the student"
     if re.search(r"\S\s*\bTutor:", turns.split(" \n ")[-1]):
         return "tutor turn glued onto the last line"
+    if re.search(r"(?:Student|Tutor): *(?:\n |$)", turns):  # MathDial has a few blank turns
+        return "blank turn in context"
     if says_answer(turns, c["answer"], c["question"]):
         return "answer in context"
     if c["student_answer"] and numbers(c["student_answer"]) == numbers(c["answer"]):
@@ -590,14 +592,16 @@ def main():
     random.Random(SEED).shuffle(clean)
     gs, ctx_failed = gsm8k_contexts(clean[: args.gsm8k], args.generators, args)
 
-    reasons = Counter(check_context(c) for c in md + gs)
-    contexts = [c for c in md + gs if check_context(c) is None]
+    verdicts = [(c, check_context(c)) for c in md + gs]
+    reasons = Counter(why for _, why in verdicts)
+    contexts = [c for c, why in verdicts if why is None]
     gen_failed = generate(contexts, args.generators, args)
     by_cid = {c["cid"]: c for c in contexts}
     generated = [{**by_cid[g["cid"]], **g} for g in unique(read_stage(GENERATED), lambda g: (g["cid"], g["ctx"]))
                  if g["cid"] in by_cid and g["ctx"] == digest(by_cid[g["cid"]]["conversation"])]
-    reasons.update(check(g) for g in generated)
-    passed = [g for g in generated if check(g) is None]
+    verdicts = [(g, check(g)) for g in generated]
+    reasons.update(why for _, why in verdicts)
+    passed = [g for g, why in verdicts if why is None]
     rows = {g["cid"]: list(rows_for(g)) for g in passed}
 
     ver_failed, disputed = 0, []
@@ -663,6 +667,8 @@ def selftest():
            "conversation": OPENER.format(question="Q?") + "Student: I got 72 \n Tutor: why?"}
     assert check_context(ctx) == "context does not end with the student"
     assert check_context({**ctx, "conversation": ctx["conversation"] + " \n Student: dunno"}) is None
+    blank = OPENER.format(question="Q?") + "Student: 72 \n Tutor:  \n Student: dunno"
+    assert check_context({**ctx, "conversation": blank}) == "blank turn in context"
     assert check_context({**ctx, "conversation": ctx["conversation"] + " \n Student: 54?"}) == "answer in context"
     assert check_context({**ctx, "question": "Q 54?", "conversation": OPENER.format(question="Q 54?")
                           + "Student: 54 minus 72 \n Tutor: why? \n Student: dunno"}) is None
