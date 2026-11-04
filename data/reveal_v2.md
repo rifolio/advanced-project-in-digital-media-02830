@@ -1,6 +1,6 @@
 # reveal_v2: training data for reveal detection
 
-`data/reveal_v2.jsonl` holds 5,880 tutor replies, each labelled `yes` (the
+`data/reveal_v2.jsonl` holds 5,858 tutor replies, each labelled `yes` (the
 reply reveals the solution) or `no` (it guides without revealing). It is
 built by `build_dataset.py` and checked by `shortcut_audit.py`. It is for
 training and validating judges and prompts. It is not a test set: MRBench
@@ -18,17 +18,17 @@ MathDial train chats (real)        GSM8K train problems
   a tutor turn                       LLM writes a wrong student attempt
         \                                 /
          `------- 5,001 contexts --------'
-                       |  context checks (answer already in chat, student right)
-                 4,618 contexts
+                       |  context checks (blank turn, answer already in chat, student right)
+                 4,599 contexts
                        |  generator writes a minimal pair or two free replies:
                        |  one guide (no) and one reveal (yes), style and length drawn at random
                        |  code checks (answer present, pair closeness, flip, length, key result)
-                 3,347 contexts
+                 3,332 contexts
                        |  every other model family judges both replies (baseline RevealsAnswer prompt)
-                 2,940 contexts kept, 5,880 rows      407 disputed -> reveal_v2_disputed.jsonl
+                 2,929 contexts kept, 5,858 rows      403 disputed -> reveal_v2_disputed.jsonl
 ```
 
-- Contexts. 1,648 kept contexts are real MathDial train chats cut just
+- Contexts. 1,637 kept contexts are real MathDial train chats cut just
   before a tutor turn (`context_source=mathdial_real`), 1,292 are GSM8K train
   problems with a student attempt written by an LLM
   (`context_source=gsm8k_synthetic`). The attempt model is always a different
@@ -62,7 +62,7 @@ MathDial train chats (real)        GSM8K train problems
 
 | | rows | problems | yes share |
 |---|---|---|---|
-| train | 5,050 | 1,610 | 0.50 |
+| train | 5,028 | 1,608 | 0.50 |
 | val | 830 | 249 | 0.50 |
 
 Problem overlap between train and val: none.
@@ -71,17 +71,18 @@ Contexts dropped, one reason each:
 
 | reason | contexts |
 |---|---|
-| key_result without a new result | 608 |
-| verifier disagreed (to disputed file) | 407 |
+| key_result without a new result | 607 |
+| verifier disagreed (to disputed file) | 403 |
 | answer already in context | 368 |
-| pair not close | 151 |
+| pair not close | 149 |
 | reveal length off | 125 |
-| pair does not flip | 118 |
+| pair does not flip | 117 |
 | key_result states the answer as digits | 106 |
 | guide length off | 70 |
 | answer in guide | 43 |
 | leading_question without the answer | 25 |
 | final_answer without the answer | 21 |
+| blank turn in context | 19 |
 | student already right | 15 |
 | answer_other_form states the answer as digits | 4 |
 
@@ -89,21 +90,21 @@ By generator, context source and length (rows, yes share):
 
 | | rows | yes |
 |---|---|---|
-| claude-haiku-5-5 | 2,772 | 0.50 |
-| gemini-3.5-flash-lite | 2,778 | 0.50 |
-| gpt-oss-120b | 330 | 0.50 |
-| mathdial_real | 3,296 | 0.50 |
+| claude-haiku-5-5 | 2,766 | 0.50 |
+| gemini-3.5-flash-lite | 2,766 | 0.50 |
+| gpt-oss-120b | 326 | 0.50 |
+| mathdial_real | 3,274 | 0.50 |
 | gsm8k_synthetic | 2,584 | 0.50 |
-| short (4 to 40 words, median 24) | 1,876 | 0.48 |
-| medium (12 to 93, median 43) | 2,460 | 0.50 |
-| long (80 to 257, median 134) | 1,544 | 0.52 |
+| short (4 to 40 words, median 24) | 1,867 | 0.49 |
+| medium (12 to 93, median 43) | 2,457 | 0.50 |
+| long (80 to 257, median 134) | 1,534 | 0.52 |
 
 Student attempts (GSM8K contexts) were written by Claude Haiku (1,088 rows),
 Gemini (954) and gpt-oss-120b (542).
 
-Styles (rows): answer_other_form 908, final_answer 620, leading_question 599,
-worked_step 545, key_result 268; conceptual_hint 617, points_to_error 601,
-recheck_step 597, hard_negative 571, guiding_question 554. 869 contexts are
+Styles (rows): answer_other_form 905, final_answer 619, leading_question 596,
+worked_step 544, key_result 265; conceptual_hint 617, points_to_error 596,
+recheck_step 596, hard_negative 570, guiding_question 550. 866 contexts are
 minimal pairs.
 
 Flags by label (share of rows):
@@ -112,15 +113,15 @@ Flags by label (share of rows):
 |---|---|---|
 | ends with ? | 0.59 | 0.59 |
 | answer_in_reply (digits) | 0.57 | 0.01 |
-| answer_in_words | 0.32 | 0.00 |
-| new_numbers not empty | 0.68 | 0.01 |
+| answer_in_words | 0.31 | 0.00 |
+| new_numbers not empty | 0.67 | 0.01 |
 | echo_of_student_answer | 0.27 | 0.21 |
 | one_step_derivable | 0.08 | 0.19 |
 
 Verifier agreement with the intended label, before filtering: Haiku 0.959 of
-3,458 rows, Gemini 0.924 of 3,702. The disputed file has 814 rows (407
-contexts); 412 rows are contested (358 `yes`, 54 `no`), mostly `key_result`
-(146) and `leading_question` (95). Those are the borderline cases of the
+3,440 rows, Gemini 0.925 of 3,684. The disputed file has 806 rows (403
+contexts); 408 rows are contested (355 `yes`, 53 `no`), mostly `key_result`
+(145) and `leading_question` (94). Those are the borderline cases of the
 rubric and worth a human look before use.
 
 ## Shortcut audit
@@ -131,7 +132,7 @@ accuracy for rules, AUC for length and bag-of-words. 0.5 means no signal.
 | | rows | number | new# | ends? | len | bow (train to val) | bow to MRBench |
 |---|---|---|---|---|---|---|---|
 | v1 gsm8k.jsonl | 5,230 | 0.958 | 0.968 | 0.502 | 0.536 | 0.997 | 0.764 |
-| v2 reveal_v2.jsonl | 5,880 | 0.782 | 0.828 | 0.499 | 0.484 | 0.918 | 0.752 |
+| v2 reveal_v2.jsonl | 5,858 | 0.783 | 0.827 | 0.499 | 0.483 | 0.917 | 0.751 |
 | v2 val | 830 | 0.784 | 0.833 | 0.520 | 0.489 | | |
 | MRBench, all labelled | 1,655 | 0.621 | 0.773 | 0.597 | 0.537 | | |
 | MRBench, Bridge | 495 | 0.500 | 0.799 | 0.681 | 0.618 | | |
@@ -140,20 +141,20 @@ accuracy for rules, AUC for length and bag-of-words. 0.5 means no signal.
 - number: `yes` iff the reply contains the final answer. new#: `yes` iff it
   has a number not in the chat. ends?: `no` iff it ends with a question.
   len: longer means `yes`. bow: naive Bayes on unigrams and bigrams.
-- The answer-number rule dropped from 0.958 to 0.782, between MRBench Bridge
+- The answer-number rule dropped from 0.958 to 0.783, between MRBench Bridge
   and MRBench MathDial. Length and question mark carry no signal.
-- Bag-of-words still reaches 0.918 inside v2, but transfers to MRBench at
-  only 0.752, about the same as v1. So the words it learns are mostly
+- Bag-of-words still reaches 0.917 inside v2, but transfers to MRBench at
+  only 0.751, about the same as v1. So the words it learns are mostly
   generator phrasing, not reveal behaviour.
 
 Openers that still give the label away: "The total" x99 (97% yes), "The
-correct" x75, "The final" x41, "So is" x35, "So since" x26, "Let's walk" x15
+correct" x75, "The final" x41, "So is" x35, "So since" x26, "Let's walk" x14
 (all 100% yes), "How many" x22 (0% yes). Top yes words include "therefore"
 and "the answer is", although the prompt asks to avoid stock phrases.
 
 ## Sanity check on val
 
-The first 300 val rows (150 yes) scored by `gemini-3.5-flash` with the
+The first 300 val rows (150 yes) of the previous build (before 19 blank-turn contexts were dropped, which reshuffled the file; 100 of those rows are still in the first 300 now) scored by `gemini-3.5-flash` with the
 baseline prompt, a model that was not a generator or verifier:
 
 | | balanced acc | recall | precision |
@@ -180,17 +181,17 @@ mistake.
 ## Known limits
 
 - Only two families did most of the work. gpt-oss-120b on OpenRouter stopped
-  after the account ran out of credits, so it wrote 330 rows and part of the
+  after the account ran out of credits, so it wrote 326 rows and part of the
   GSM8K attempts. Its rows were checked by both other families; Claude and
   Gemini rows had only one verifier each.
 - The generator is easy to tell from the words (one vs rest AUC 0.99 for
   Claude and Gemini). Train with both, and do not read too much into
   per-generator results.
-- The new-number rule (0.828) is a little stronger than on MRBench (0.773):
-  reveals tend to add a number, guides almost never do (0.68 vs 0.01).
+- The new-number rule (0.827) is a little stronger than on MRBench (0.773):
+  reveals tend to add a number, guides almost never do (0.67 vs 0.01).
   `hard_negative` guides help but do not fully close this.
 - Reveal-style openers ("The total", "The correct") are a residual cue.
-- `key_result` was the most wasteful style (714 contexts dropped by its two
+- `key_result` was the most wasteful style (713 contexts dropped by its two
   checks) and the most contested one.
 - "One step left" replies are not used as positives: verifiers split on them
   and MRBench gold calls them `no`. They show up only as the
@@ -199,6 +200,14 @@ mistake.
   so it is a weak flag.
 - The bag-of-words probe is naive Bayes, not TF-IDF logistic regression, to
   stay pure Python.
+- Real MathDial chats are messy. Some tutors switch to a side problem ("Let's
+  try something different", about 60 kept contexts) while the reply is still
+  written for the original problem, 116 contexts have two tutor turns in a
+  row, and 73 conversations appear twice (two MathDial chats with the same
+  problem and the same first turns, different replies). Contexts with a blank
+  turn are dropped.
+- Hand read after the build (80 random rows): about 4% looked wrong, mostly
+  `key_result` or `hard_negative` rows at the edge of the rubric.
 - Labels come from the generator's intent plus code checks plus model votes.
   No human labelled these rows. About 70 pilot rows were read by eye.
 
