@@ -152,8 +152,8 @@ def make_judge(name=None, program_path=None, threshold=0.5):
     return judge
 
 
-def load(split, limit=None):
-    rows = [json.loads(line) for line in open(DATA)]
+def load(split, limit=None, path=DATA):
+    rows = [json.loads(line) for line in open(path)]
     rows = [r for r in rows if r["split"] == split][:limit]
     return [dspy.Example(**r).with_inputs("conversation", "response") for r in rows]
 

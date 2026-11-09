@@ -22,6 +22,8 @@ JUDGES = {
     "gemini-4-argon": {"model": "gemini/gemini-4-argon"},
     # groq/openai/gpt-oss-safeguard-20b or openrouter/openai/gpt-oss-safeguard-20b
     "gpt-oss": {"model": os.getenv("GPT_OSS_MODEL"), "needs": "GPT_OSS_MODEL"},
+    # needs OPENROUTER_API_KEY; a reasoning model, generator and verifier in build_dataset.py
+    "gpt-oss-120b": {"model": "openrouter/openai/gpt-oss-120b"},
     # self-hosted OpenAI-compatible server on the DTU GPU, e.g. hosted_vllm/<model>
     "dtu": {
         "model": os.getenv("DTU_MODEL"),

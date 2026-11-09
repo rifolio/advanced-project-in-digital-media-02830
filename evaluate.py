@@ -100,6 +100,7 @@ def run(name, data, args):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--split", default="test")
+    p.add_argument("--data", default="data/mrbench.jsonl", help="rows in the data/mrbench.jsonl format")
     p.add_argument("--limit", type=int, help="only the first N examples")
     p.add_argument(
         "--model", nargs="+", default=[config.JUDGE_MODEL],
@@ -111,7 +112,7 @@ def main():
     p.add_argument("--threads", type=int, default=config.NUM_THREADS)
     args = p.parse_args()
 
-    data = load(args.split, args.limit)
+    data = load(args.split, args.limit, args.data)
     rows = []
     for name in args.model:
         model, _ = config.resolve(name)
@@ -124,7 +125,7 @@ def main():
         with open(RESULTS, "a") as f:
             f.write(json.dumps({
                 "time": datetime.now().isoformat(timespec="seconds"), "judge": name, "model": model,
-                "program": args.program, "split": args.split, "n": len(data), **s,
+                "program": args.program, "data": args.data, "split": args.split, "n": len(data), **s,
             }) + "\n")
         if args.errors_out:
             path = Path(args.errors_out)

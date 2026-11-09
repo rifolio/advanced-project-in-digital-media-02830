@@ -22,7 +22,7 @@ the answer. What the default does, from one call per model on 2026-11-03
 | gemini-3.5-flash-lite | off (no thinking tokens) |
 | gemini-3.5-flash, 3.6-flash, 3.7-flash, 3.8-flash, 3.1-pro | on, about 200-300 thinking tokens per call |
 | gemini-4-argon | none reported |
-| claude-haiku-5-5, claude-sonnet-5-5 | off (0 thinking tokens, Anthropic needs it enabled explicitly) |
+| claude-haiku-5-5, claude-sonnet-5-5 | none observed (0 thinking tokens; adaptive thinking is the API default, the model chose not to think) |
 
 So part of the latency gap between flash-lite and the bigger Gemini models is
 thinking. Defaults can change like aliases do; pin a level in `config.JUDGES`
