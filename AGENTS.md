@@ -16,6 +16,8 @@ uv run optimize.py               # GEPA prompt optimisation
 uv run evaluate.py --selftest     # scoring math check
 uv run build_dataset.py --mathdial 20 --gsm8k 20   # v2 data pilot (resumes from data/raw/)
 uv run shortcut_audit.py data/gsm8k.jsonl data/reveal_v2.jsonl   # shortcut audit
+uv sync --extra embed             # optional deps for embed_audit.py (numpy, scikit-learn, sentence-transformers, matplotlib)
+uv run embed_audit.py --model minilm   # embedding audit, results in results/embed-audit/
 ```
 
 Always `uv run`, never bare `python`/`python3`. `evaluate.py --selftest` runs
@@ -37,6 +39,8 @@ label_sample.py  blind hand-labelling of training rows, agreement with the pipel
 build_dataset.py  v2 reveal data from MathDial + GSM8K, several model families, cross-family
                  verification, data/reveal_v2.jsonl (datasheet data/reveal_v2.md)
 shortcut_audit.py  number/?/length/bag-of-words shortcut audit for any reveal data file
+embed_audit.py   embedding probes, label transfer, clusters and plots (EMBEDDERS in config.py)
+embed_audit.ipynb  team-facing report of the audit: charts, held-out generator test, rerun switch
 judge.py         DSPy judge, Jev judge, data loader, GEPA metric
 evaluate.py      compare judges on a split, appends runs/results.jsonl
 optimize.py      GEPA prompt optimisation, saves runs/gepa/program.json
