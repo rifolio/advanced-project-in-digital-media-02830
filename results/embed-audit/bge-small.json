@@ -1,0 +1,42 @@
+{
+ "embedder": "bge-small",
+ "model": "BAAI/bge-small-en-v1.5",
+ "dim": 384,
+ "tokens": 0,
+ "probe_cv": {
+  "label": 0.8916680780520805,
+  "generator": 0.9072137446286355,
+  "context_source": 0.6647145821000812,
+  "generator_in_yes": 0.8774542019115497,
+  "generator_in_no": 0.9364732060465659
+ },
+ "transfer": {
+  "v2_val": 0.8909391784003484,
+  "v1_val": 0.9861022084960084,
+  "v2_mrbench": 0.7719947817708418,
+  "v2_mrbench_Bridge": 0.7904317469364491,
+  "v2_mrbench_MathDial": 0.8414953271028037,
+  "v1_mrbench": 0.7626788353172348,
+  "v1_mrbench_Bridge": 0.8229374465659732,
+  "v1_mrbench_MathDial": 0.8556905503634475
+ },
+ "silhouette": {
+  "label": 0.009992338716983795,
+  "generator": 0.008321755565702915,
+  "context_source": 0.0014105139998719096,
+  "mrbench_label": -0.014364766888320446
+ },
+ "domain": {
+  "probe_v2_vs_mrbench": 0.9530235719686146,
+  "nn_to_v2": 0.7505971193313599,
+  "nn_within_mrbench": 0.8167434930801392
+ },
+ "pairs": {
+  "pair": 0.9373037219047546,
+  "pair_n": 866,
+  "pair_random": 0.6031697392463684,
+  "free": 0.8040871620178223,
+  "free_n": 2063,
+  "free_random": 0.5742997527122498
+ }
+}
