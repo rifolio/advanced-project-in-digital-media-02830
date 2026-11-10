@@ -1,0 +1,42 @@
+{
+ "embedder": "minilm",
+ "model": "sentence-transformers/all-MiniLM-L6-v2",
+ "dim": 384,
+ "tokens": 0,
+ "probe_cv": {
+  "label": 0.8872737640489188,
+  "generator": 0.9089284771335016,
+  "context_source": 0.6587157754784388,
+  "generator_in_yes": 0.8819196429738447,
+  "generator_in_no": 0.9265222940059781
+ },
+ "transfer": {
+  "v2_val": 0.8725678618086806,
+  "v1_val": 0.9872967775770644,
+  "v2_mrbench": 0.705381163491883,
+  "v2_mrbench_Bridge": 0.71143844400114,
+  "v2_mrbench_MathDial": 0.8302907580477673,
+  "v1_mrbench": 0.707273042216773,
+  "v1_mrbench_Bridge": 0.7669385864918781,
+  "v1_mrbench_MathDial": 0.8515680166147456
+ },
+ "silhouette": {
+  "label": 0.00645039277151227,
+  "generator": 0.006053428631275892,
+  "context_source": 0.002665609819814563,
+  "mrbench_label": 0.003569131949916482
+ },
+ "domain": {
+  "probe_v2_vs_mrbench": 0.9416518222298321,
+  "nn_to_v2": 0.5406230688095093,
+  "nn_within_mrbench": 0.6618390679359436
+ },
+ "pairs": {
+  "pair": 0.8890548348426819,
+  "pair_n": 866,
+  "pair_random": 0.26959264278411865,
+  "free": 0.6906911134719849,
+  "free_n": 2063,
+  "free_random": 0.2595992386341095
+ }
+}

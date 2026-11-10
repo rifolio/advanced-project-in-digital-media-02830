@@ -1,0 +1,42 @@
+{
+ "embedder": "gemini-embedding-2",
+ "model": "gemini/gemini-embedding-2",
+ "dim": 768,
+ "tokens": 701702,
+ "probe_cv": {
+  "label": 0.9475964737783629,
+  "generator": 0.9639459159330137,
+  "context_source": 0.7331403983160316,
+  "generator_in_yes": 0.9551761943525581,
+  "generator_in_no": 0.973792393849706
+ },
+ "transfer": {
+  "v2_val": 0.9410248221802875,
+  "v1_val": 0.9982664180409067,
+  "v2_mrbench": 0.8593811743180847,
+  "v2_mrbench_Bridge": 0.8215659732117412,
+  "v2_mrbench_MathDial": 0.8961266874350987,
+  "v1_mrbench": 0.7815313120814997,
+  "v1_mrbench_Bridge": 0.7792996580222286,
+  "v1_mrbench_MathDial": 0.8770041536863968
+ },
+ "silhouette": {
+  "label": 0.010534150525927544,
+  "generator": 0.014124727807939053,
+  "context_source": 0.0038690215442329645,
+  "mrbench_label": 0.01563301868736744
+ },
+ "domain": {
+  "probe_v2_vs_mrbench": 0.9867744061623581,
+  "nn_to_v2": 0.7717946171760559,
+  "nn_within_mrbench": 0.8399060964584351
+ },
+ "pairs": {
+  "pair": 0.9392500519752502,
+  "pair_n": 866,
+  "pair_random": 0.6713531017303467,
+  "free": 0.8400927186012268,
+  "free_n": 2063,
+  "free_random": 0.6542468070983887
+ }
+}

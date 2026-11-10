@@ -50,6 +50,16 @@ JUDGES = {
     # "chatgpt": {"model": os.getenv("OPENAI_MODEL"), "needs": "OPENAI_MODEL"},
 }
 
+# Text embedders for embed_audit.py (needs `uv sync --extra embed`). "litellm" ones need
+# GEMINI_API_KEY; "st" ones are local sentence-transformers models. Pinned, never aliases.
+EMBEDDERS = {
+    "gemini-embedding-001": {"kind": "litellm", "model": "gemini/gemini-embedding-001"},
+    "gemini-embedding-2": {"kind": "litellm", "model": "gemini/gemini-embedding-2"},
+    "minilm": {"kind": "st", "model": "sentence-transformers/all-MiniLM-L6-v2"},
+    "bge-small": {"kind": "st", "model": "BAAI/bge-small-en-v1.5"},
+}
+EMBED_DIMS = 768  # Gemini output size (Matryoshka cut from 3072), keeps the cache small
+
 JUDGE_MODEL = os.getenv("JUDGE_MODEL", "gemini")
 REFLECTION_MODEL = os.getenv("REFLECTION_MODEL", "gemini/gemini-flash-latest")
 # Models that write synthetic training data (prepare_training_data.py), comma-separated.
